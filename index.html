@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BRIANT // NIGHT GRID</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Chakra+Petch:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#050308;
+    --bg-deep:#0a0518;
+    --bg-deep2:#120a29;
+    --neon-magenta:#ff1f7a;
+    --neon-cyan:#22f3ff;
+    --neon-red:#ff2b40;
+    --neon-amber:#ffb238;
+    --web-white:#eef1ff;
+    --web-line: rgba(238,241,255,0.16);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{
+    width:100%;height:100%;
+    background:var(--bg-void);
+    overflow:hidden;
+    font-family:'Chakra Petch',sans-serif;
+  }
+  #stage{
+    position:fixed;inset:0;
+    width:100%;height:100%;
+    overflow:hidden;
+  }
+
+  /* ---------- SKY GRADIENT + STARS ---------- */
+  .sky{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(ellipse at 50% 18%, rgba(255,31,122,0.16), transparent 55%),
+      radial-gradient(ellipse at 15% 75%, rgba(34,243,255,0.10), transparent 60%),
+      linear-gradient(180deg, var(--bg-void) 0%, var(--bg-deep2) 45%, var(--bg-deep) 100%);
+  }
+  #stars{position:absolute;inset:0;}
+
+  /* ---------- MOON ---------- */
+  .moon{
+    position:absolute;
+    top:8%;left:50%;
+    width:min(9vw,90px);height:min(9vw,90px);
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff6e8, var(--neon-amber) 55%, rgba(255,178,56,0.05) 78%);
+    box-shadow:0 0 60px 20px rgba(255,178,56,0.35), 0 0 140px 60px rgba(255,31,122,0.12);
+    filter:blur(0.3px);
+    animation:moonPulse 6s ease-in-out infinite;
+  }
+  @keyframes moonPulse{
+    0%,100%{opacity:.9;transform:translateX(-50%) scale(1);}
+    50%{opacity:1;transform:translateX(-50%) scale(1.04);}
+  }
+
+  /* ---------- CITY LAYERS (parallax) ---------- */
+  .city-layer{
+    position:absolute;bottom:0;left:0;
+    width:200%;height:60%;
+    display:flex;align-items:flex-end;
+    will-change:transform;
+  }
+  .city-far{opacity:.55;filter:blur(0.5px) brightness(.8);animation:drift 90s linear infinite;}
+  .city-mid{opacity:.8;animation:drift 55s linear infinite;}
+  .city-near{opacity:1;animation:drift 32s linear infinite;}
+  @keyframes drift{
+    from{transform:translateX(0);}
+    to{transform:translateX(-50%);}
+  }
+  .bld{
+    position:relative;
+    background:linear-gradient(180deg,var(--bg-deep2),var(--bg-void));
+    border-top:1px solid rgba(255,255,255,0.04);
+    flex-shrink:0;
+  }
+  .bld i{
+    position:absolute;left:0;right:0;
+    display:grid;
+    grid-template-columns:repeat(var(--cols,4),1fr);
+    gap:6%;
+    padding:8% 12%;
+    height:100%;
+    width:100%;
+  }
+  .bld i span{
+    background:var(--win-color,var(--neon-cyan));
+    opacity:.15;
+    aspect-ratio:1/1.4;
+    animation:flicker 4s infinite ease-in-out;
+    animation-delay:calc(var(--d,0)*1s);
+  }
+  @keyframes flicker{
+    0%,100%{opacity:.12;}
+    45%{opacity:.85;}
+    50%{opacity:.12;}
+    55%{opacity:.6;}
+    60%{opacity:.15;}
+  }
+  .sign{
+    position:absolute;
+    font-family:'Orbitron',sans-serif;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    animation:neonBuzz 3.2s infinite;
+    white-space:nowrap;
+    pointer-events:none;
+  }
+  @keyframes neonBuzz{
+    0%,19%,21%,23%,100%{opacity:1;filter:drop-shadow(0 0 6px currentColor) drop-shadow(0 0 16px currentColor);}
+    20%,22%{opacity:.35;filter:none;}
+  }
+
+  /* ---------- RAIN ---------- */
+  #rain-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.55;}
+  #ember-canvas{position:absolute;inset:0;width:100%;height:100%;}
+
+  /* ---------- GROUND REFLECTION / FOG ---------- */
+  .fog{
+    position:absolute;left:0;right:0;bottom:0;height:22%;
+    background:linear-gradient(180deg, rgba(5,3,8,0) 0%, var(--bg-void) 85%);
+    z-index:5;
+  }
+  .ground-glow{
+    position:absolute;left:0;right:0;bottom:0;height:10%;
+    background:linear-gradient(180deg, rgba(255,31,122,0.10), rgba(34,243,255,0.05) 40%, transparent);
+    z-index:4;mix-blend-mode:screen;
+  }
+
+  /* ---------- WEB SLINGER SILHOUETTE ---------- */
+  .slinger{
+    position:absolute; top:-8%; left:-10%;
+    width:46px;height:46px;
+    z-index:6;
+    opacity:0;
+    animation:swing 13s ease-in-out infinite;
+    animation-delay:2s;
+  }
+  .slinger svg{width:100%;height:100%;filter:drop-shadow(0 0 6px rgba(255,43,64,0.8));}
+  @keyframes swing{
+    0%{ top:-8%; left:-8%; opacity:0; transform:rotate(-10deg);}
+    3%{opacity:1;}
+    45%{ top:38%; left:58%; transform:rotate(35deg);}
+    50%{ top:46%; left:66%; transform:rotate(15deg);}
+    55%{ top:38%; left:74%; transform:rotate(-25deg);}
+    92%{ top:-10%; left:112%; opacity:1; transform:rotate(-40deg);}
+    100%{ top:-10%; left:112%; opacity:0;}
+  }
+  .swing-line{
+    position:absolute;
+    background:linear-gradient(180deg, rgba(238,241,255,0.5), rgba(238,241,255,0));
+    width:1.5px;
+    top:-30%;left:22px;height:0;
+    transform-origin:top center;
+  }
+
+  /* ---------- CENTER WEB + NAME ---------- */
+  .web-wrap{
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    width:min(78vw,560px);
+    height:min(78vw,560px);
+    z-index:7;
+    display:flex;align-items:center;justify-content:center;
+    animation:webSway 8s ease-in-out infinite;
+  }
+  @keyframes webSway{
+    0%,100%{transform:translate(-50%,-50%) rotate(0deg);}
+    50%{transform:translate(-50%,-50%) rotate(1.4deg);}
+  }
+  #web-svg{width:100%;height:100%;overflow:visible;}
+  .strand{
+    fill:none;
+    stroke:var(--web-line);
+    stroke-width:1.1;
+  }
+  .radial{
+    fill:none;
+    stroke:var(--web-line);
+    stroke-width:1.3;
+  }
+  .pulse-dot{
+    fill:var(--neon-cyan);
+    filter:drop-shadow(0 0 4px var(--neon-cyan)) drop-shadow(0 0 10px var(--neon-cyan));
+  }
+  .pulse-dot.magenta{fill:var(--neon-magenta);filter:drop-shadow(0 0 4px var(--neon-magenta)) drop-shadow(0 0 10px var(--neon-magenta));}
+  .pulse-dot.red{fill:var(--neon-red);filter:drop-shadow(0 0 4px var(--neon-red)) drop-shadow(0 0 10px var(--neon-red));}
+
+  .name-core{
+    position:absolute;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+    z-index:8;
+    pointer-events:none;
+  }
+  .eyebrow{
+    font-family:'Chakra Petch',sans-serif;
+    font-size:clamp(9px,1.6vw,12px);
+    letter-spacing:.55em;
+    color:var(--neon-cyan);
+    opacity:.75;
+    text-transform:uppercase;
+    margin-bottom:.6em;
+    text-shadow:0 0 8px rgba(34,243,255,0.7);
+  }
+  h1.name{
+    font-family:'Orbitron',sans-serif;
+    font-weight:900;
+    font-size:clamp(38px,10vw,88px);
+    letter-spacing:.05em;
+    color:var(--web-white);
+    line-height:1;
+    text-shadow:
+      0 0 6px rgba(238,241,255,0.9),
+      0 0 22px var(--neon-red),
+      0 0 46px var(--neon-magenta),
+      0 0 90px rgba(255,31,122,0.5);
+    animation:namePulse 3.4s ease-in-out infinite, glitch 7s infinite;
+    position:relative;
+  }
+  @keyframes namePulse{
+    0%,100%{filter:brightness(1);}
+    50%{filter:brightness(1.18);}
+  }
+  @keyframes glitch{
+    0%,96%,100%{transform:translate(0,0);}
+    96.3%{transform:translate(-2px,1px);}
+    96.6%{transform:translate(2px,-1px);}
+    96.9%{transform:translate(-1px,0);}
+  }
+  .tag{
+    font-family:'Chakra Petch',sans-serif;
+    font-size:clamp(9px,1.5vw,12px);
+    letter-spacing:.42em;
+    color:var(--neon-magenta);
+    opacity:.8;
+    text-transform:uppercase;
+    margin-top:.7em;
+    text-shadow:0 0 8px rgba(255,31,122,0.7);
+  }
+
+  /* ---------- SCANLINES / VIGNETTE ---------- */
+  #scan{
+    position:absolute;inset:0;z-index:20;pointer-events:none;
+    background:repeating-linear-gradient(180deg, rgba(255,255,255,0.035) 0px, rgba(255,255,255,0.035) 1px, transparent 2px, transparent 3px);
+    mix-blend-mode:overlay;
+    opacity:.5;
+  }
+  #vignette{
+    position:absolute;inset:0;z-index:21;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(0,0,0,0.55) 100%);
+  }
+  #flicker-overlay{
+    position:absolute;inset:0;z-index:22;pointer-events:none;
+    background:rgba(255,255,255,0.02);
+    animation:screenFlicker 6s infinite;
+  }
+  @keyframes screenFlicker{
+    0%,93%,100%{opacity:0;}
+    93.5%{opacity:1;}
+    94%{opacity:0;}
+    95.5%{opacity:.6;}
+    96%{opacity:0;}
+  }
+
+  footer{
+    position:absolute;bottom:14px;left:0;right:0;
+    text-align:center;z-index:23;
+    font-family:'Chakra Petch',sans-serif;
+    font-size:10px;letter-spacing:.3em;
+    color:rgba(238,241,255,0.35);
+    text-transform:uppercase;
+  }
+
+  @media (max-width:640px){
+    .moon{width:16vw;height:16vw;top:6%;}
+    .web-wrap{width:92vw;height:92vw;}
+    .eyebrow{letter-spacing:.4em;}
+    .tag{letter-spacing:.3em;}
+    .city-layer{height:48%;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001s !important; animation-iteration-count:1 !important;}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="sky"></div>
+  <canvas id="stars"></canvas>
+  <div class="moon"></div>
+
+  <div class="city-layer city-far" id="cityFar"></div>
+  <div class="city-layer city-mid" id="cityMid"></div>
+
+  <canvas id="rain-canvas"></canvas>
+  <canvas id="ember-canvas"></canvas>
+
+  <div class="city-layer city-near" id="cityNear"></div>
+
+  <div class="ground-glow"></div>
+  <div class="fog"></div>
+
+  <div class="slinger">
+    <div class="swing-line"></div>
+    <svg viewBox="0 0 100 100"><path d="M50 8 C40 8 34 18 34 30 C34 46 42 58 50 66 C58 58 66 46 66 30 C66 18 60 8 50 8 Z" fill="#0a0a12" stroke="#ff2b40" stroke-width="2"/><circle cx="42" cy="26" r="4" fill="#22f3ff"/><circle cx="58" cy="26" r="4" fill="#22f3ff"/></svg>
+  </div>
+
+  <div class="web-wrap">
+    <svg id="web-svg" viewBox="0 0 400 400"></svg>
+  </div>
+
+  <div class="name-core">
+    <div class="eyebrow">Night Grid // Sector 07</div>
+    <h1 class="name" data-text="BRIANT">BRIANT</h1>
+    <div class="tag">Web Slinger of the Neon City</div>
+  </div>
+
+  <div id="scan"></div>
+  <div id="vignette"></div>
+  <div id="flicker-overlay"></div>
+
+  <footer>est. sector-07 &nbsp;•&nbsp; neon rain protocol &nbsp;•&nbsp; live wallpaper</footer>
+</div>
+
+<script>
+/* ================= STARS ================= */
+(function(){
+  const c=document.getElementById('stars');
+  const ctx=c.getContext('2d');
+  function size(){c.width=innerWidth;c.height=innerHeight*0.6;}
+  size();
+  const stars=Array.from({length:120},()=>({
+    x:Math.random()*c.width, y:Math.random()*c.height,
+    r:Math.random()*1.3+0.2, s:Math.random()*0.02+0.005, p:Math.random()*Math.PI*2
+  }));
+  function draw(t){
+    ctx.clearRect(0,0,c.width,c.height);
+    stars.forEach(st=>{
+      const a=0.4+0.6*Math.abs(Math.sin(st.p+t*st.s*60));
+      ctx.beginPath();
+      ctx.fillStyle=`rgba(238,241,255,${a})`;
+      ctx.arc(st.x,st.y,st.r,0,7);
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+  window.addEventListener('resize',size);
+})();
+
+/* ================= CITY GENERATION ================= */
+function buildCity(el,count,minH,maxH,cols,winColor){
+  let html='';
+  for(let i=0;i<count;i++){
+    const h=Math.round(minH+Math.random()*(maxH-minH));
+    const w=Math.round(28+Math.random()*46);
+    const hasSign = Math.random()<0.12;
+    html+=`<div class="bld" style="width:${w}px;height:${h}px;">`;
+    let inner='<i style="--cols:'+cols+'">';
+    const winCount = cols*Math.round(h/26);
+    for(let j=0;j<winCount;j++){
+      const delay=(Math.random()*4).toFixed(2);
+      const color = Math.random()<0.5?'var(--neon-cyan)':(Math.random()<0.5?'var(--neon-magenta)':'var(--neon-amber)');
+      inner+=`<span style="--d:${delay};--win-color:${color}"></span>`;
+    }
+    inner+='</i>';
+    html+=inner;
+    if(hasSign){
+      const texts=['壱','弐','漆','NEON','WEB','GRID','漆黒','八','阵','雨夜'];
+      const t=texts[Math.floor(Math.random()*texts.length)];
+      const cols2=['var(--neon-magenta)','var(--neon-cyan)','var(--neon-red)','var(--neon-amber)'];
+      const col=cols2[Math.floor(Math.random()*cols2.length)];
+      html+=`<span class="sign" style="top:${10+Math.random()*20}%;left:${10+Math.random()*40}%;color:${col};font-size:${10+Math.random()*8}px;">${t}</span>`;
+    }
+    html+='</div>';
+  }
+  el.innerHTML = html+html; /* duplicate for seamless loop */
+}
+buildCity(document.getElementById('cityFar'),26,80,180,3,'cyan');
+buildCity(document.getElementById('cityMid'),22,120,260,4,'magenta');
+buildCity(document.getElementById('cityNear'),16,160,340,5,'red');
+
+/* ================= RAIN ================= */
+(function(){
+  const c=document.getElementById('rain-canvas');
+  const ctx=c.getContext('2d');
+  function size(){c.width=innerWidth;c.height=innerHeight;}
+  size();
+  let drops=[];
+  function initDrops(){
+    const count = innerWidth<640?90:220;
+    drops=Array.from({length:count},()=>({
+      x:Math.random()*c.width,
+      y:Math.random()*c.height,
+      len:10+Math.random()*18,
+      speed:7+Math.random()*9,
+      op:0.15+Math.random()*0.35
+    }));
+  }
+  initDrops();
+  function draw(){
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.strokeStyle='rgba(200,220,255,0.5)';
+    ctx.lineWidth=1;
+    drops.forEach(d=>{
+      ctx.globalAlpha=d.op;
+      ctx.beginPath();
+      ctx.moveTo(d.x,d.y);
+      ctx.lineTo(d.x-2,d.y+d.len);
+      ctx.stroke();
+      d.y+=d.speed; d.x-=0.6;
+      if(d.y>c.height){d.y=-20; d.x=Math.random()*c.width;}
+    });
+    ctx.globalAlpha=1;
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+  window.addEventListener('resize',()=>{size();initDrops();});
+})();
+
+/* ================= EMBERS / FIREFLY DATA MOTES ================= */
+(function(){
+  const c=document.getElementById('ember-canvas');
+  const ctx=c.getContext('2d');
+  function size(){c.width=innerWidth;c.height=innerHeight;}
+  size();
+  const colors=['34,243,255','255,31,122','255,178,56'];
+  let motes=[];
+  function init(){
+    const count = innerWidth<640?18:36;
+    motes=Array.from({length:count},()=>({
+      x:Math.random()*c.width, y:Math.random()*c.height,
+      r:1+Math.random()*2, spd:0.2+Math.random()*0.5,
+      col:colors[Math.floor(Math.random()*colors.length)],
+      phase:Math.random()*Math.PI*2
+    }));
+  }
+  init();
+  function draw(t){
+    ctx.clearRect(0,0,c.width,c.height);
+    motes.forEach(m=>{
+      const alpha=0.3+0.5*Math.abs(Math.sin(t*0.001+m.phase));
+      ctx.beginPath();
+      ctx.fillStyle=`rgba(${m.col},${alpha})`;
+      ctx.shadowColor=`rgba(${m.col},1)`;
+      ctx.shadowBlur=8;
+      ctx.arc(m.x,m.y,m.r,0,7);
+      ctx.fill();
+      m.y-=m.spd; m.x+=Math.sin(t*0.001+m.phase)*0.3;
+      if(m.y<-10){m.y=c.height+10; m.x=Math.random()*c.width;}
+    });
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+  window.addEventListener('resize',()=>{size();init();});
+})();
+
+/* ================= SPIDER WEB SVG ================= */
+(function(){
+  const svg=document.getElementById('web-svg');
+  const NS='http://www.w3.org/2000/svg';
+  const cx=200, cy=200;
+  const rings=[38,70,104,140,178];
+  const spokes=12;
+  const points=[];
+
+  for(let i=0;i<spokes;i++){
+    const ang=(i/spokes)*Math.PI*2;
+    const x2=cx+Math.cos(ang)*rings[rings.length-1];
+    const y2=cy+Math.sin(ang)*rings[rings.length-1];
+    const line=document.createElementNS(NS,'line');
+    line.setAttribute('x1',cx);line.setAttribute('y1',cy);
+    line.setAttribute('x2',x2);line.setAttribute('y2',y2);
+    line.setAttribute('class','radial');
+    svg.appendChild(line);
+    points.push({ang, ...Object.fromEntries(rings.map((r,ri)=>[ri,{x:cx+Math.cos(ang)*r,y:cy+Math.sin(ang)*r}]))});
+  }
+
+  rings.forEach((r,ri)=>{
+    let d='';
+    for(let i=0;i<=spokes;i++){
+      const ang=(i%spokes/spokes)*Math.PI*2;
+      const jitter = (ri>0) ? (Math.sin(i*3+ri)*3) : 0;
+      const x=cx+Math.cos(ang)*(r+jitter);
+      const y=cy+Math.sin(ang)*(r+jitter);
+      d+= (i===0?'M':'L')+x.toFixed(1)+' '+y.toFixed(1)+' ';
+    }
+    const path=document.createElementNS(NS,'path');
+    path.setAttribute('d',d);
+    path.setAttribute('class','strand');
+    path.style.opacity = 0.9 - ri*0.12;
+    svg.appendChild(path);
+  });
+
+  /* pulsing light dots traveling along random spokes toward center */
+  const dotColors=['','magenta','red'];
+  for(let i=0;i<7;i++){
+    const dot=document.createElementNS(NS,'circle');
+    dot.setAttribute('r',2.6);
+    dot.setAttribute('class','pulse-dot '+dotColors[i%3]);
+    svg.appendChild(dot);
+    const ang=Math.random()*Math.PI*2;
+    const startR = rings[rings.length-1];
+    const dur = 2.4+Math.random()*2.2;
+    const delay = Math.random()*3;
+    function animate(startTime){
+      const now=performance.now();
+      const elapsed=((now-startTime)/1000 - delay);
+      let t = (elapsed % dur)/dur;
+      if(elapsed<0) t=0;
+      const rr = startR - t*startR;
+      const x = cx+Math.cos(ang)*Math.max(rr,0);
+      const y = cy+Math.sin(ang)*Math.max(rr,0);
+      dot.setAttribute('cx',x.toFixed(1));
+      dot.setAttribute('cy',y.toFixed(1));
+      dot.style.opacity = elapsed<0?0:(0.3+0.7*(1-t));
+      requestAnimationFrame(()=>animate(startTime));
+    }
+    animate(performance.now());
+  }
+})();
+</script>
+</body>
+</html>
